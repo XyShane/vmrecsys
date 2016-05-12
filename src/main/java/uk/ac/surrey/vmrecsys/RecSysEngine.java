@@ -11,6 +11,7 @@ import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.neighborhood.UserNeighborhood;
 import org.apache.mahout.cf.taste.recommender.ItemBasedRecommender;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.Recommender;
 import org.apache.mahout.cf.taste.recommender.UserBasedRecommender;
 import org.apache.mahout.cf.taste.similarity.ItemSimilarity;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
@@ -27,28 +28,52 @@ import java.util.List;
 @Component
 public class RecSysEngine {
 
-    public RecSysEngine() throws TasteException, IOException  {
+    private Recommender recommender = null;
+
+    public RecSysEngine() throws TasteException, IOException {
+    }
+
+    @PostConstruct
+    public void initRecommender() throws TasteException, IOException {
+        System.out.println("Constructed!");
+        DataModel datamodel = new FileDataModel(new File("C:\\Users\\tansh\\Desktop\\Final Year Project\\Project\\Visual Music Rec Web\\src\\main\\resources\\datasets\\hetrec\\user_artists.dat")); //data
+
+        ItemSimilarity similarity = new LogLikelihoodSimilarity(datamodel);
+
+        recommender = new GenericItemBasedRecommender(datamodel, similarity);
 
     }
 
-    public void initRecommender() throws TasteException, IOException {
+    public List<RecommendedItem> recommendArtists(String person, int recNo) throws TasteException {
 
-        DataModel datamodel = new FileDataModel(new File("C:\\Users\\tansh\\IdeaProjects\\Visual Music Recommender\\src\\main\\resources\\user_artists.dat")); //data
+        Long pr = Long.parseLong(person);
 
-        //Creating UserSimilarity object.
-//        UserSimilarity usersimilarity = new PearsonCorrelationSimilarity(datamodel);
-        ItemSimilarity similarity = new LogLikelihoodSimilarity(datamodel);
+        List<RecommendedItem> recommendations = this.recommender.recommend(pr, recNo);
 
-        //Creating UserNeighbourHHood object.
-//        UserNeighborhood userneighborhood = new ThresholdUserNeighborhood(1.0, usersimilarity, datamodel);
+        return recommendations;
+    }
 
-        //Create UserRecomender
-//        UserBasedRecommender recommender = new GenericUserBasedRecommender(datamodel, userneighborhood, usersimilarity);
-        ItemBasedRecommender recommender = new GenericItemBasedRecommender(datamodel, similarity);
+    public String[] findArtistById (RecommendedItem item) throws IOException {
+        File file = new File("C:\\Users\\tansh\\Desktop\\Final Year Project\\Project\\Visual Music Rec Web\\src\\main\\resources\\datasets\\hetrec\\artists.dat");
+        String line = "";
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        boolean firstLine = true;
+        String[] data;
+        String[] defaultData = {"Data not found.","Sadly.."};
+        System.out.println(item.getItemID());
 
-        List<RecommendedItem> recommendations = recommender.recommend(2, 5);
-        for (RecommendedItem recommendation : recommendations) {
-            System.out.println(recommendation);
+        while((line = br.readLine()) != null){
+            data = line.split("\t");
+            if(firstLine){
+                firstLine = false;
+                continue;
+            } else {
+                if (Long.parseLong(data[0]) == (item.getItemID())){
+                    System.out.println("Found");
+                    return data;
+                }
+            }
         }
+        return defaultData;
     }
 }

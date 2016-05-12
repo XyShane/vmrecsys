@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * Created by tansh on 17/03/2016.
  */
-@Component
+//@Component
 public class RecEngine {
 
     public RecEngine() throws TasteException, IOException {
@@ -43,7 +43,7 @@ public class RecEngine {
     private DataModel dataModel;
     private Recommender recommender = null;
 
-    @PostConstruct
+//    @PostConstruct
     public void initRecommender() throws TasteException {
 
         try {
